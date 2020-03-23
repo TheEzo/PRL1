@@ -12,33 +12,33 @@ else
   numbers=$1
 fi
 
-mpic++ --prefix /usr/local/share/OpenMPI -o oets odd-even.cpp
+mpic++ --prefix /usr/local/share/OpenMPI -o ots ots.cpp
 
 if [ $test -eq 0 ]
 then
   dd if=/dev/random bs=1 count=$numbers of=numbers status=none
-  mpirun --prefix /usr/local/share/OpenMPI -np $numbers oets
+  mpirun --prefix /usr/local/share/OpenMPI -np $numbers ots
 else
-  rm testfiles/*
-  for i in {4..30}
+  rm -f testfiles/*
+  for i in {4..20}
   do
     printf $i >> output
     for j in {1..50}
     do
-      dd if=/dev/random bs=1 count=$i of=testfiles/$i iflag=append conv=notrunc status=none
-      mv testfiles/$i numbers
+      if [ -f testfiles/$i ]
+      then
+        dd if=/dev/random bs=1 count=$i of=testfiles/$j iflag=append conv=notrunc status=none
+      else
+        dd if=/dev/random bs=1 count=$i of=testfiles/$j status=none
+      fi
+      mv testfiles/$j numbers
       printf ";" >> output
-      mpirun --prefix /usr/local/share/OpenMPI -np $i oets
+      mpirun --prefix /usr/local/share/OpenMPI -np $i ots 2&>/dev/null
       printf $? >> output
-      mv numbers testfiles/$i
+#      mv numbers testfiles/$j
     done
     printf "\n" >> output
   done
 fi
 
-
-#spusteni
-mpirun --prefix /usr/local/share/OpenMPI -np $numbers oets
-
-#uklid
-rm -f oets numbers
+rm -f ots numbers
