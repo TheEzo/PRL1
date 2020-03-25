@@ -1,6 +1,6 @@
 #!/bin/bash
 
-test=1
+test=0
 if [ $# -lt 1 ]
 then
   if [ $test -eq 0 ]
@@ -19,7 +19,7 @@ then
   dd if=/dev/random bs=1 count=$numbers of=numbers status=none
   mpirun --prefix /usr/local/share/OpenMPI -np $numbers ots
 else # generovani csv dat pro graf
-  mkdir testfiles
+  mkdir -p testfiles
   rm -f testfiles/* output
   for i in {2..20}
   do
@@ -41,4 +41,4 @@ else # generovani csv dat pro graf
   done
 fi
 
-rm -f ots numbers
+rm -fr ots numbers testfiles

@@ -150,8 +150,10 @@ int main(int argc, char *argv[])
     double end;
     if(myid == 0)
         end = MPI_Wtime();
-    if(!printed)
-        test_end(numprocs, stat, mynumber, myid, true);
+//    if(!printed)
+//        test_end(numprocs, stat, mynumber, myid, true);
+
+
 
     #ifdef TESTING
     if(myid == 0){
@@ -161,13 +163,31 @@ int main(int argc, char *argv[])
         f << ";" << end - start;
         f.close();
     }
+    #else
+    int *final = new int [numprocs];
+    for(int i = 1; i < numprocs; i++){
+        if(myid == i)
+            MPI_Send(&mynumber, 1, MPI_INT, 0, TAG,  MPI_COMM_WORLD);
+        if(myid == 0){
+            MPI_Recv(&neighnumber, 1, MPI_INT, i, TAG, MPI_COMM_WORLD, &stat);
+            final[i] = neighnumber;
+        }
+    }
+    if(myid == 0){
+        final[0] = mynumber;
+        for(int i = 1; i < numprocs; i++){
+            cout << final[i] << endl;
+        }
+    }
+
     #endif
 
     MPI_Finalize();
 
 
     #ifdef TESTING
-    return iterations;
+    return 0;
+//    return iterations;
     #else
     return 0;
     #endif
