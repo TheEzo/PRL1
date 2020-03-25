@@ -12,13 +12,13 @@
  * if true: return code je celkovy pocet iteraci, zadny output
  * else:    return code je 0 pokud program nespadne
  */
-#define TESTING
+//#define TESTING
 
 #define TAG 0
 
 using namespace std;
 
-bool test_end(int numprocs, MPI_Status stat, int mynumber, int myid){
+bool test_end(int numprocs, MPI_Status stat, int mynumber, int myid, bool to_print){
     /*
      * Posle vysledky na procesor "0", sekvencne je porovna a zjisti, jestli ma byt sort ukoncen nebo ne
      * Funkce je pritomna jen z duvodu ziskani informaci pro graf
@@ -44,6 +44,8 @@ bool test_end(int numprocs, MPI_Status stat, int mynumber, int myid){
         }
         // zaslani informace o ukonceni a pripadny vypis
         #ifndef TESTING
+        if(to_print)
+            can_end = 1;
         if(can_end)
             cout << final[0] << endl;
         #endif
@@ -102,12 +104,20 @@ int main(int argc, char *argv[])
     int odd_max = 2 * (numprocs / 2) - 1;
     int even_max = 2 * ((numprocs - 1) / 2);
 
+    bool printed = false;
+    double start;
+    if(myid == 0)
+        start = MPI_Wtime();
     // zacatek razeni, maximalne -- pocet_cisel / 2
     for(int k = 0; k < numprocs/2; k++){
-        if(test_end(numprocs, stat, mynumber, myid))
-            break;
+//        if(test_end(numprocs, stat, mynumber, myid, false)){
+//            printed = true;
+//            break;
+//        }
         iterations++;
+
         // sude odeslou lichym a cekaji na vysledek
+        // ve skutecnosti indexujeme procesory od "0", takze se vlastne jedna o liche procesory pri indexaci od "1"
         if(myid < odd_max && !(myid % 2)){
             MPI_Send(&mynumber, 1, MPI_INT, myid + 1, TAG, MPI_COMM_WORLD);
             MPI_Recv(&mynumber, 1, MPI_INT, myid + 1, TAG, MPI_COMM_WORLD, &stat);
@@ -137,8 +147,25 @@ int main(int argc, char *argv[])
                 MPI_Send(&neighnumber, 1, MPI_INT, myid - 1, TAG, MPI_COMM_WORLD);
         }
     }
+    double end;
+    if(myid == 0)
+        end = MPI_Wtime();
+    if(!printed)
+        test_end(numprocs, stat, mynumber, myid, true);
+
+    #ifdef TESTING
+    if(myid == 0){
+        cout << "Iterations: " << iterations << "\nTime: " << end - start << endl;
+        ofstream f;
+        f.open("output", ios::app);
+        f << ";" << end - start;
+        f.close();
+    }
+    #endif
 
     MPI_Finalize();
+
+
     #ifdef TESTING
     return iterations;
     #else

@@ -18,12 +18,13 @@ if [ $test -eq 0 ]
 then
   dd if=/dev/random bs=1 count=$numbers of=numbers status=none
   mpirun --prefix /usr/local/share/OpenMPI -np $numbers ots
-else
-  rm -f testfiles/*
-  for i in {4..20}
+else # generovani csv dat pro graf
+  mkdir testfiles
+  rm -f testfiles/* output
+  for i in {2..20}
   do
     printf $i >> output
-    for j in {1..50}
+    for j in {1..30}
     do
       if [ -f testfiles/$i ]
       then
@@ -32,9 +33,8 @@ else
         dd if=/dev/random bs=1 count=$i of=testfiles/$j status=none
       fi
       mv testfiles/$j numbers
-      printf ";" >> output
       mpirun --prefix /usr/local/share/OpenMPI -np $i ots 2&>/dev/null
-      printf $? >> output
+      # pro testovani na merlinovi neni potreba pridavat cisla do souboru, merlin neni pomaly jako lokalni stroj
 #      mv numbers testfiles/$j
     done
     printf "\n" >> output
